@@ -47,10 +47,7 @@ class App(customtkinter.CTk):
         },indent=1))
 
         # test creadentials
-        self.encryptionkey_Entry.insert(0, "B5EXjitZol4J/wnEk47mf3LTKaemRc9xZA8w5uuzu1k=")
-        self.authenticationKey_Entry.insert(0, "r+Ju4699AH6nHNLIfhZd5Tzfdf1c6cVOuVCthRYQsdI=")
-        self.domain_Entry.insert(0, "test-enterprise-privacy.tp-testing.com")
-
+        
     def button_callback(self):
         
         encrypted_msg = encrypt(self.textbox.get(1.0, "end").encode("utf-8"), self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
