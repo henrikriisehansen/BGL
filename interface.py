@@ -1,3 +1,5 @@
+import random
+import string
 from encryption import encrypt
 from decryption import decrypt
 import customtkinter
@@ -6,61 +8,106 @@ import os
 
 BaseUrl = "https://www.trustpilot.com/evaluate-bgl/"
 
-
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        # configure window
         self.title("Business Genearated link")
-        self.geometry("800x600")
+        self.geometry("1000x680")
+
+        # configure grid layout (2x10 grid)
         self.grid_columnconfigure((0, 1), weight=1)
+        self.grid_rowconfigure((0,1,2,3,4,5,6,7,8,9,10,11), weight=1)
 
-        self.button = customtkinter.CTkButton(self, width=400, text="Encrypt", command=self.button_callback)
-        self.button.grid(row=0, column=0, padx=20, pady=20, sticky="w")
-        
+        self.encrypt_btn = customtkinter.CTkButton(self,text="Encrypt", command=self.encrypt_btn_clicked)
+        self.encrypt_btn.grid(row=0, column=0,padx=20,pady=5,sticky="ew")
+
         self.encryptionkey_label = customtkinter.CTkLabel(self, text="Encryption key", fg_color="transparent")
-        self.encryptionkey_label.grid(row=1, column=0, padx=20, pady=5, sticky="w")
+        self.encryptionkey_label.grid(row=1, column=0, padx=20, pady=5, sticky="ws")
 
-        self.encryptionkey_Entry = customtkinter.CTkEntry(self, width=400, placeholder_text="Encryption key")
-        self.encryptionkey_Entry.grid(row=2, column=0, padx=20, pady=5, sticky="w")
+        self.encryptionkey_Entry = customtkinter.CTkEntry(self, placeholder_text="Encryption key")
+        self.encryptionkey_Entry.grid(row=2, column=0, padx=20, pady=5, sticky="ewn")
 
         self.authenticationKey_label = customtkinter.CTkLabel(self, text="Authentication key", fg_color="transparent")
-        self.authenticationKey_label.grid(row=3, column=0, padx=20, pady=5, sticky="w")
+        self.authenticationKey_label.grid(row=3, column=0, padx=20, pady=5, sticky="ws")
 
-        self.authenticationKey_Entry = customtkinter.CTkEntry(self, width=400, placeholder_text="Authentication key")
-        self.authenticationKey_Entry.grid(row=4, column=0, padx=20, pady=5, sticky="w")
+        self.authenticationKey_Entry = customtkinter.CTkEntry(self, placeholder_text="Authentication key")
+        self.authenticationKey_Entry.grid(row=4, column=0, padx=20, pady=5, sticky="ewn")
 
         self.domain_label = customtkinter.CTkLabel(self, text="Domain", fg_color="transparent")
-        self.domain_label.grid(row=5, column=0, padx=20, pady=5, sticky="w")
+        self.domain_label.grid(row=5, column=0, padx=20, pady=5, sticky="ws")
 
-        self.domain_Entry = customtkinter.CTkEntry(self, width=400, placeholder_text="Domain")
-        self.domain_Entry.grid(row=6, column=0, padx=20, pady=5, sticky="w")
+        self.domain_Entry = customtkinter.CTkEntry(self, placeholder_text="Domain")
+        self.domain_Entry.grid(row=6, column=0, padx=20, pady=5, sticky="ewn")
 
         self.payload_label = customtkinter.CTkLabel(self, text="Payload", fg_color="transparent")
-        self.payload_label.grid(row=7, column=0, padx=20, pady=5, sticky="w")
+        self.payload_label.grid(row=7, column=0, padx=20, pady=5, sticky="ws")
 
-        self.payload = customtkinter.CTkTextbox(self, width=400,height=200,fg_color="transparent",border_width=1,corner_radius=10)
-        self.payload.grid(row=8, column=0, padx=20, pady=5,sticky="w")
+        self.payload = customtkinter.CTkTextbox(self, fg_color="transparent",border_width=1,corner_radius=10)
+        self.payload.grid(row=8, column=0, padx=20, pady=5, sticky="ewn")
         
         self.payload.insert(0.0, json.dumps({
-            "email": "hrh+werwerwerwr234243@trustpilot.com",
+            "email": f"hrh+{self.random_string()}@trustpilot.com",
             "name": "henrik",
-            "ref": "1234",
+            "ref": f"{self.random_string()}",
             "skus": ["sku1", "sku2", "sku3"],
             "tags": ["tag1", "tag2", "tag3"]
         },indent=1))
        
+        self.link = customtkinter.CTkLabel(self,text="business generated link",fg_color="transparent")
+        self.link.grid(row=9, column=0, padx=20, pady=5, sticky="ws")
+
+        self.copy_link = customtkinter.CTkButton(self, width=60, text="copy link", command=self.copy_link_callback)
+        self.copy_link.grid(row=10, column=0, padx=20, pady=5, sticky="w")
+
+        self.link = customtkinter.CTkEntry(self, placeholder_text="business generated link")
+        self.link.grid(row=11, column=0,padx=20, pady=5, sticky="ewn")
+
+        # right column
+        self.decrypt_btn = customtkinter.CTkButton(self,text="Decrypt", command=self.decrypt_btn_clicked)
+        self.decrypt_btn.grid(row=0, column=1,padx=20,pady=5,sticky="ew")
+
+        self.payload_to_decrypt_label = customtkinter.CTkLabel(self, text="Payload to decrypt", fg_color="transparent")
+        self.payload_to_decrypt_label.grid(row=1, column=1, padx=20, pady=5, sticky="w")
+
+        self.decrypted_payload = customtkinter.CTkTextbox(self, fg_color="transparent",border_width=1,corner_radius=10)
+        self.decrypted_payload.grid(row=8, column=1, padx=20, pady=5, sticky="ewn")
+
         # test creadentials
-        
         self.encryptionkey_Entry.insert(0, os.getenv("encryptionkey"))
         self.authenticationKey_Entry.insert(0, os.getenv("authenticationkey"))
         self.domain_Entry.insert(0, os.getenv("domain"))
 
-    def button_callback(self):
+    def encrypt_btn_clicked(self):
         
-        encrypted_msg = encrypt(self.payload.get(1.0, "end").encode("utf-8"), self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
+        try:
+            self.encrypted_msg = encrypt(self.payload.get(1.0, "end").encode("utf-8"), self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
+        except Exception as e:
+            self.decrypted_payload.delete(0.0, "end")
+            self.decrypted_payload.insert(0.0, e)
+            return
+        else:
+            self.link.delete(0, "end")
+            self.link.insert(0, f"{BaseUrl}{self.domain_Entry.get()}?p={self.encrypted_msg}")
+        
+    def decrypt_btn_clicked(self):
 
-        print(f"https://www.trustpilot.com/evaluate-bgl/{self.domain_Entry.get()}?p={encrypted_msg}")
+        try:
+            decrypted_msg = decrypt(self.encrypted_msg, self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
+        except Exception as e:
+            self.decrypted_payload.delete(0.0, "end")
+            self.decrypted_payload.insert(0.0, e)
+            return
+        else:
+            self.decrypted_payload.delete(0.0, "end")
+            self.decrypted_payload.insert(0.0, decrypted_msg.decode())
+        
+    def random_string(self):
+        return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    
+    def copy_link_callback(self):
 
-        # decrypted_msg = decrypt(encrypted_msg, self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
-        # print(f"decrypted_msg: %s" % decrypted_msg.decode())
+        self.clipboard_clear()
+        self.clipboard_append(self.link.get())
+        self.update()
