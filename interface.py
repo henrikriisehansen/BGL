@@ -5,6 +5,8 @@ from decryption import decrypt
 import customtkinter
 import json
 import os
+import re
+import urllib.parse
 
 BaseUrl = "https://www.trustpilot.com/evaluate-bgl/"
 
@@ -71,6 +73,9 @@ class App(customtkinter.CTk):
         self.payload_to_decrypt_label = customtkinter.CTkLabel(self, text="Payload to decrypt", fg_color="transparent")
         self.payload_to_decrypt_label.grid(row=1, column=1, padx=20, pady=5, sticky="w")
 
+        self.payload_to_decrypt_entry = customtkinter.CTkEntry(self, placeholder_text="Payload to decrypt)")
+        self.payload_to_decrypt_entry.grid(row=2, column=1, padx=20, pady=5, sticky="ewn")
+
         self.decrypted_payload = customtkinter.CTkTextbox(self, fg_color="transparent",border_width=1,corner_radius=10)
         self.decrypted_payload.grid(row=8, column=1, padx=20, pady=5, sticky="ewn")
 
@@ -90,18 +95,25 @@ class App(customtkinter.CTk):
         else:
             self.link.delete(0, "end")
             self.link.insert(0, f"{BaseUrl}{self.domain_Entry.get()}?p={self.encrypted_msg}")
+            self.payload_to_decrypt_entry.delete(0,"end")
+            self.payload_to_decrypt_entry.insert(0, self.encrypted_msg)
         
     def decrypt_btn_clicked(self):
 
+        # if not self.is_base64(urllib.parse.unquote(self.payload_to_decrypt_entry.get())):
+        #     self.decrypted_payload.delete(0.0, "end")
+        #     self.decrypted_payload.insert(0.0, "Not a valid base64 string")
+        #     return
+        
         try:
-            decrypted_msg = decrypt(self.encrypted_msg, self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
+            decrypted_msg = decrypt(self.payload_to_decrypt_entry.get(), self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
+            
+            self.decrypted_payload.delete(0.0, "end")
+            self.decrypted_payload.insert(0.0, decrypted_msg)
         except Exception as e:
             self.decrypted_payload.delete(0.0, "end")
             self.decrypted_payload.insert(0.0, e)
-            return
-        else:
-            self.decrypted_payload.delete(0.0, "end")
-            self.decrypted_payload.insert(0.0, decrypted_msg.decode())
+        
         
     def random_string(self):
         return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
@@ -111,3 +123,7 @@ class App(customtkinter.CTk):
         self.clipboard_clear()
         self.clipboard_append(self.link.get())
         self.update()
+
+    def is_base64(self,string):
+        pattern = re.compile(r'^[A-Za-z0-9+/]+={0,2}$')
+        return bool(pattern.fullmatch(string))
