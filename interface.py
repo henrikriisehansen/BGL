@@ -7,6 +7,7 @@ import json
 import os
 import re
 import urllib.parse
+import webbrowser
 
 BaseUrl = "https://www.trustpilot.com/evaluate-bgl/"
 
@@ -62,6 +63,9 @@ class App(customtkinter.CTk):
 
         self.copy_link = customtkinter.CTkButton(self, width=60, text="copy link", command=self.copy_link_callback)
         self.copy_link.grid(row=10, column=0, padx=20, pady=5, sticky="w")
+
+        self.link_btn = customtkinter.CTkButton(self, text="open link", command=self.link_btn_clicked)
+        self.link_btn.grid(row=10, column=0, padx=20, pady=5, sticky="e")
 
         self.link = customtkinter.CTkEntry(self, placeholder_text="business generated link")
         self.link.grid(row=11, column=0,padx=20, pady=5, sticky="ewn")
@@ -127,3 +131,6 @@ class App(customtkinter.CTk):
     def is_base64(self,string):
         pattern = re.compile(r'^[A-Za-z0-9+/]+={0,2}$')
         return bool(pattern.fullmatch(string))
+    
+    def link_btn_clicked(self):
+        webbrowser.open_new(f"{self.link.get()}")
