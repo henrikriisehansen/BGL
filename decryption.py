@@ -15,7 +15,6 @@ class DecryptionError(Exception):
 
 class EncodingError(DecryptionError):
     """Raised when the input is not properly URL encoded."""
-    pass
 
 class IntegrityError(DecryptionError):
     """Raised when the message fails integrity verification."""
@@ -61,7 +60,7 @@ def decrypt(encrypted_msg, encrypt_key, hash_key):
     # Verify message integrity
     expected_hash = hmac.new(hash_key, iv + encrypted_data, digestmod=hashlib.sha256).digest()
     if not hmac.compare_digest(msg_hash, expected_hash):
-        raise IntegrityError("Message integrity verification failed. Double-check that the sender are using the exact same authentication key/hash key.")
+        raise IntegrityError("Message integrity verification failed.\nDouble-check that the sender are using the exact same authentication key/hash key.")
     
    
     # Decrypt the message
@@ -87,11 +86,7 @@ def is_url_encoded(encrypted_msg):
 
     decoded = urllib.parse.unquote(encrypted_msg)
     return decoded != encrypted_msg  # True if encoded, False if not
-    # try:
-    #     urllib.parse.unquote_plus(encrypted_msg)
-    #     return True
-    # except UnicodeDecodeError:
-    #     return False
+    
 
    
 

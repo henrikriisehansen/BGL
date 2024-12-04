@@ -22,7 +22,6 @@ def encrypt(msg, encrypt_key, hash_key):
     encrypt_key = base64.b64decode(encrypt_key)
     hash_key = base64.b64decode(hash_key)
 
-    # padded_msg = Padding.pad(msg, BLOCK_SIZE, style="pkcs7")
     padded_msg = Padding.pad(msg, BLOCK_SIZE, style="pkcs7")
 
     cipher = AES.new(encrypt_key, AES.MODE_CBC)
@@ -33,6 +32,4 @@ def encrypt(msg, encrypt_key, hash_key):
     # Convert bytes to string before URL-encoding
     base64_msg = base64.b64encode(cipher.iv + encrypted_msg + msg_hash).decode('utf-8') 
     
-
-    # urllib.parse.quote_plus(base64_msg)
     return urllib.parse.quote_plus(base64_msg)
