@@ -52,22 +52,14 @@ class App(customtkinter.CTk):
         self.payload = customtkinter.CTkTextbox(self, fg_color="transparent",border_width=1,corner_radius=10)
         self.payload.grid(row=8, column=0, padx=20, pady=5, sticky="ewn")
         
-
+        
         self.payload_str = json.dumps({
-            "email": f"hrh+{self.random_string()}@trustpilot.com",
-            "name": "henrik",
-            "ref": f"{self.random_string()}",
+            "email": "",
+            "name": "",
+            "ref": "",
             "skus": ["sku1", "sku2", "sku3"],
             "tags": ["tag1", "tag2", "tag3"]
         },indent=1) 
-        
-        # self.payload_str = json.dumps({
-        #     "email": "",
-        #     "name": "",
-        #     "ref": "",
-        #     "skus": ["sku1", "sku2", "sku3"],
-        #     "tags": ["tag1", "tag2", "tag3"]
-        # },indent=1) 
 
 
         self.payload.insert(0.0, self.payload_str)
