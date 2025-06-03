@@ -14,7 +14,8 @@ class DecryptionError(Exception):
     pass
 
 class EncodingError(DecryptionError):
-    """Raised when the input is not properly URL encoded."""
+    """Raised when the input is not properly URL or Base64 encoded."""
+    pass
 
 class IntegrityError(DecryptionError):
     """Raised when the message fails integrity verification."""
@@ -23,6 +24,11 @@ class IntegrityError(DecryptionError):
 class PaddingError(DecryptionError):
     """Raised when the padding is invalid."""
     pass
+
+class JSONFormatError(DecryptionError):
+    """Raised when the decrypted message is not valid JSON."""
+    pass
+
 
 def decrypt(encrypted_msg, encrypt_key, hash_key):
     """Decrypts and verifies the integrity of a message.

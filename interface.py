@@ -2,6 +2,7 @@ import random
 import string
 from encryption import encrypt
 from decryption import decrypt
+
 import customtkinter
 import json
 import os
@@ -104,7 +105,19 @@ class App(customtkinter.CTk):
         self.payload_to_decrypt_entry.delete(0,"end")
 
     def encrypt_btn_clicked(self):
-        
+
+        # Check if the encryption key, authentication key, and domain are provided
+        if not self.encryptionkey_Entry.get() or not self.authenticationKey_Entry.get() or not self.domain_Entry.get():
+            self.decrypted_payload.delete(0.0, "end")
+            self.decrypted_payload.insert(0.0, "Please fill in all fields.")
+            return
+        # Check if the payload is valid JSON
+        try:
+            payload_data = json.loads(self.payload.get(1.0, "end"))
+        except json.JSONDecodeError as e:
+            self.decrypted_payload.delete(0.0, "end")
+            self.decrypted_payload.insert(0.0, f"Invalid JSON payload: {e}")
+            return
         try:
             self.encrypted_msg = encrypt(self.payload.get(1.0, "end").encode("utf-8"), self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
         except Exception as e:
@@ -128,6 +141,18 @@ class App(customtkinter.CTk):
         except Exception as e:
             self.decrypted_payload.delete(0.0, "end")
             self.decrypted_payload.insert(0.0, e)
+
+    def _display_message_in_output_area(self, message: str, is_error: bool = False):
+        """Helper to display messages or data in the right-hand output textbox."""
+        self.decrypted_payload.configure(state="normal") # Enable to modify
+        self.decrypted_payload.delete("0.0", "end")
+        self.odecrypted_payload.insert("0.0", message)
+        if is_error:
+            self.decrypted_payload.configure(text_color="red")
+        else:
+            self.output_area_textbox.configure(text_color=customtkinter.ThemeManager.theme["CTkTextbox"]["text_color"])
+             # Use default color
+        self.output_area_textbox.configure(state="disabled") # Disable again
         
         
     def random_string(self):
