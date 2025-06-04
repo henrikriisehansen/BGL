@@ -3,6 +3,7 @@ import json
 import os
 import re
 import webbrowser
+import string
 from pprint import pformat
 
 # Assuming encryption.py has:
@@ -265,9 +266,7 @@ class App(customtkinter.CTk):
             return
 
         try:
-            # decrypt_payload is assumed to be the enhanced function:
-            # decrypt_and_validate_json(encrypted_msg_str, encrypt_key_b64, hash_key_b64)
-            # It should return a Python dict/list if successful.
+            # :
             decrypted_data_obj = decrypt_payload(encrypted_payload_str, enc_key, auth_key)
             
             # Pretty format the Python object (dict/list) as a string for display

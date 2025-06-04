@@ -1,7 +1,7 @@
 import random
 import string
 from encryption import encrypt
-from decryption import decrypt
+from decryption import decrypt,DecryptionError,EncodingError,IntegrityError,PaddingError,JSONFormatError
 
 import customtkinter
 import json
@@ -104,7 +104,23 @@ class App(customtkinter.CTk):
     def clear_btn_clicked(self):
         self.payload_to_decrypt_entry.delete(0,"end")
 
+    def clear_decrypted_payload(self):
+
+        """Clears the decrypted payload area."""
+
+        self.decrypted_payload.configure(state="normal")  # Enable to modify    
+        # self.decrypted_payload.configure(text_color=customtkinter.ThemeManager.theme["CTkTextbox"]["text_color"])
+        self.decrypted_payload.delete(0.0, "end")
+
     def encrypt_btn_clicked(self):
+
+        """Encrypts the payload and generates a business link."""
+
+        if not self.validate_inputs_for_encryption():
+            return
+        
+        self.clear_decrypted_payload() 
+        
 
         # Check if the encryption key, authentication key, and domain are provided
         if not self.encryptionkey_Entry.get() or not self.authenticationKey_Entry.get() or not self.domain_Entry.get():
@@ -131,32 +147,118 @@ class App(customtkinter.CTk):
             self.payload_to_decrypt_entry.insert(0, self.encrypted_msg)
         
     def decrypt_btn_clicked(self):
+
+        """Decrypts the payload and displays the result."""
+        encrypted_payload_str = self.payload_to_decrypt_entry.get().strip()
+        enc_key = self.encryptionkey_Entry.get().strip()
+        auth_key = self.authenticationKey_Entry.get().strip()
+
+        if not encrypted_payload_str:
+            self._display_message_in_output_area("Payload to decrypt cannot be empty.", is_error=True)
+            return
+        if not enc_key:
+            self._display_message_in_output_area("Encryption Key cannot be empty for decryption.", is_error=True)
+            return
+        if not auth_key:
+            self._display_message_in_output_area("Authentication Key cannot be empty for decryption.", is_error=True)
+            return
+        
  
+        # try:
+        #     self.decrypted_msg = decrypt(encrypted_payload_str, enc_key, auth_key)
+
+
+           
+            # self.decrypted_payload.delete(0.0, "end")
+            # self.decrypted_payload.insert(0.0, self.decrypted_msg.decode("utf-8")) 
+            
+        # except Exception as e:
+        #     self.decrypted_payload.delete(0.0, "end")
+        #     self.decrypted_payload.insert(0.0, e)
+
         try:
-            self.decrypted_msg = decrypt(self.payload_to_decrypt_entry.get(), self.encryptionkey_Entry.get(), self.authenticationKey_Entry.get())
-            
-            self.decrypted_payload.delete(0.0, "end")
-            self.decrypted_payload.insert(0.0, self.decrypted_msg.decode("utf-8")) 
-            
-        except Exception as e:
-            self.decrypted_payload.delete(0.0, "end")
-            self.decrypted_payload.insert(0.0, e)
+            # Attempt to decrypt the payload
+            decrypted_data_obj = decrypt(encrypted_payload_str, enc_key, auth_key)
+            formatted_decrypted_data = decrypted_data_obj.decode('utf-8')
+            self._display_message_in_output_area(f"Decryption Successful:\n{formatted_decrypted_data}", is_error=False)
+
+        # Specific errors from decryption module
+        except JSONFormatError as e:
+            self._display_message_in_output_area(f"JSON Format Error: {e}", is_error=True)
+        except IntegrityError as e:
+            self._display_message_in_output_area(f"Integrity Error: {e}", is_error=True)
+        except PaddingError as e:
+            self._display_message_in_output_area(f"Padding Error: {e}", is_error=True)
+        except EncodingError as e: # Catches Base64 or URL decoding issues within decrypt_payload
+            self._display_message_in_output_area(f"Encoding Error: {e}", is_error=True)
+        except DecryptionError as e: # Catch-all for other decryption specific errors
+            self._display_message_in_output_area(f"Decryption Failed: {e}", is_error=True)
+        except Exception as e: # Generic fallback for unexpected errors
+            self._display_message_in_output_area(f"An Unexpected Error Occurred: {e}", is_error=True)
 
     def _display_message_in_output_area(self, message: str, is_error: bool = False):
         """Helper to display messages or data in the right-hand output textbox."""
         self.decrypted_payload.configure(state="normal") # Enable to modify
         self.decrypted_payload.delete("0.0", "end")
-        self.odecrypted_payload.insert("0.0", message)
+        self.decrypted_payload.insert("0.0", message)
+
+        print(f"Displaying message: {message}")  # Debugging output
         if is_error:
             self.decrypted_payload.configure(text_color="red")
         else:
-            self.output_area_textbox.configure(text_color=customtkinter.ThemeManager.theme["CTkTextbox"]["text_color"])
-             # Use default color
-        self.output_area_textbox.configure(state="disabled") # Disable again
+            # Use default color
+            pass
+            # self.decrypted_payload.delete("0.0", "end")
+           
+           
+        self.decrypted_payload.configure(state="disabled") # Disable again
         
+
+    def validate_inputs_for_encryption(self) -> bool:
+
+        """Validates inputs required for encryption."""
+        enc_key = self.encryptionkey_Entry.get().strip()
+        auth_key = self.authenticationKey_Entry.get().strip()
+        domain = self.domain_Entry.get().strip()
+        payload_str = self.payload.get("1.0", "end-1c").strip()
+
+        if not enc_key:
+            self._display_message_in_output_area("Encryption Key cannot be empty.", is_error=True)
+            return False
+        if not self._is_base64(enc_key):
+            self._display_message_in_output_area("Warning: Encryption Key does not look like valid Base64.", is_error=True)
+            # Not returning False, as some libs might be tolerant. Actual b64decode will fail later if invalid.
+        
+        if not auth_key:
+            self._display_message_in_output_area("Authentication Key cannot be empty.", is_error=True)
+            return False
+        if not self._is_base64(auth_key):
+            self._display_message_in_output_area("Warning: Authentication Key does not look like valid Base64.", is_error=True)
+
+        if not domain:
+            self._display_message_in_output_area("Domain cannot be empty.", is_error=True)
+            return False
+        
+        if not payload_str:
+            self._display_message_in_output_area("Payload cannot be empty.", is_error=True)
+            return False
+        try:
+            json.loads(payload_str) # Validate if payload is JSON
+        except json.JSONDecodeError as e:
+            self._display_message_in_output_area(f"Payload is not valid JSON: {e}", is_error=True)
+            return False
+        return True
         
     def random_string(self):
         return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    
+    def _is_base64(self, s: str) -> bool:
+        """Checks if a string could be Base64 encoded."""
+        if not s or not isinstance(s, str):
+            return False
+        # Basic regex for Base64: allows A-Z, a-z, 0-9, +, /, and optional trailing = or ==
+        # This doesn't validate padding length strictly but is a good first pass.
+        return bool(re.fullmatch(r"^[A-Za-z0-9+/]*={0,2}$", s.strip()))
     
     def copy_link_callback(self):
 
